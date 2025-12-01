@@ -1,0 +1,7 @@
+Pandas
+Numpy
+scikit-learn
+scikit-surprise
+flask
+sqlalchemy
+joblib
