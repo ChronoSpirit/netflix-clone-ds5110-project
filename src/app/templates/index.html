@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="home-wrapper">
+
+    <h2 class="home-title">Choose Your Profile</h2>
+
+    <form method="post" action="/recommendations" class="home-form">
+        <div class="form-row">
+            <label>Select User ID:</label>
+            <select name="user_id">
+                {% for uid in user_ids %}
+                <option value="{{ uid }}">{{ uid }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-row">
+            <label>Select Algorithm:</label>
+            <select name="algo">
+                <option value="cf">Collaborative Filtering</option>
+                <option value="hybrid">Hybrid</option>
+            </select>
+        </div>
+
+        <button type="submit" class="netflix-button">Show Recommendations</button>
+    </form>
+
+</div>
+
+{% endblock %}

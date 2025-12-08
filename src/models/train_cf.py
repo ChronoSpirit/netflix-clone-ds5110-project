@@ -2,7 +2,7 @@
 Script that trains the Collaborative Filtering (CF) recommendation model.
 Uses Surprise library's SVD which is a matrix factorization algorithm
 
-CF model predicts how a user would rate a mobie based off of patterns that is learned
+CF model predicts how a user would rate a movie based off of patterns that is learned
 from all user-movie interactions in the MovieLens dataset.
 """
 import joblib

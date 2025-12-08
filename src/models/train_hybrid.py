@@ -6,7 +6,7 @@ generate Collaborative Filtering (CF), Content-Based, and Hybrid recomenndations
 - Content-Based recommendations use movie-to-movie similarity
 - Hybrid recommendations combines both CF predictions with content similarity to improve personalization.
 
-This file is sued directly by the Flask web application to product recommendations for users.
+This file is used directly by the Flask web application to product recommendations for users.
 """
 import pandas as pd
 import joblib
@@ -22,7 +22,7 @@ cosine_sim = content_artifacts["cosine_sim"]
 
 # Retrieve a user's rated movies from databse
 def get_user_ratings(user_id):
-    return pd.real_sql(
+    return pd.read_sql(
         "SELECT movie_id, rating FROM ratings where user_id = :uid",
         engine,
         params={"uid":user_id}
@@ -80,3 +80,74 @@ def get_hybrid_recommendations(user_id, n=10):
     cf_candidates["hybrid_score"] = cf_candidates["pred_rating"] + boost
 
     return cf_candidates.sort_values("hybrid_score", ascending=False).head(n)
+
+def get_trending(n=10):
+    """
+    Returns top-N movies with the highest number of ratings.
+    Used for the 'Trending Now' row.
+    """
+    query = """
+        SELECT
+            m.movie_id,
+            m.title,
+            m.release_year,
+            m.genres,
+            COUNT(r.rating) AS num_ratings,
+            AVG(r.rating)  AS avg_rating
+        FROM ratings r
+        JOIN movies m ON m.movie_id = r.movie_id
+        GROUP BY m.movie_id
+        HAVING num_ratings >= 20         -- filter out very rare movies
+        ORDER BY num_ratings DESC
+        LIMIT :n
+    """
+    df = pd.read_sql(query, engine, params={"n": n})
+    return df
+
+def get_classics(n=10):
+    """
+    Returns top-N highest rated classic films (before 1980).
+    """
+
+    query = """
+        SELECT m.movie_id, m.title, m.release_year, m.genres,
+               AVG(r.rating) AS avg_rating,
+               COUNT(r.rating) AS num_ratings
+        FROM ratings r
+        JOIN movies m ON m.movie_id = r.movie_id
+        WHERE m.release_year < 1980
+        GROUP BY m.movie_id
+        HAVING num_ratings > 20      -- filter low-sample movies
+        ORDER BY avg_rating DESC
+        LIMIT :n
+    """
+
+    df = pd.read_sql(query, engine, params={"n": n})
+    return df
+
+# Because You Watched (Content-based)
+from joblib import load
+
+content_model = load("src/models/content_based.pkl")
+cosine_sim = content_model["cosine_sim"]
+movie_list = content_model["movies"]
+
+def get_because_you_watched(movie_id, n=10):
+    idx = movie_list.index[movie_list["movie_id"] == movie_id][0]
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:n+1]
+    movie_indices = [i[0] for i in sim_scores]
+    return movie_list.iloc[movie_indices]
+
+def get_last_watched(user_id):
+    """Return the most recently rated movie by a user."""
+    query = """
+        SELECT m.movie_id, m.title, m.release_year
+        FROM ratings r
+        JOIN movies m ON m.movie_id = r.movie_id
+        WHERE r.user_id = :uid
+        ORDER BY r.rating_ts DESC
+        LIMIT 1
+    """
+    df = pd.read_sql(query, engine, params={"uid": user_id})
+    return df.iloc[0] if not df.empty else None
