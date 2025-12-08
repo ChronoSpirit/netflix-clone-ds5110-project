@@ -28,3 +28,40 @@ This project evaluates how different recommendation approaches perform when gene
 * Classics – highly-rated historical films
 
 * Because You Watched – content-based similarity recommendations
+
+## How To run:
+* Clone the Repository
+* Install Dependencies
+* Instal required packages: -r requirements.txt
+* Run the preprocessing script to build SQLite DB
+* Train the models and generate the .pkl files
+  * train_cf.py
+  * train_content_based.py
+  * train_hybrid.py
+* Run Flask App
+  * From project root: python/src/app/app.py
+
+## Methodolgy Overview
+* Collaborative Filtering (SVD)
+  * Learns latent factors between users and movies
+  * Predict missing ratings
+* Content-Based Filtering
+  * TF-IDF vectorization of genres
+  * Cosine similarity to find similar movies
+* Hybrid Approach
+  * Weighted combination of Collaborative Filtering predictions and movie similarity
+  * Improves diversity and cold-start issues
+* Additional Insights
+  * Trending (most rated movies)
+  * Classics (Older, highly rated movies)
+  * Because You Watched (similarity-based row)
+
+ ## Results
+ 
+ Collaborative Filtering RMSE: 0.93
+ 
+ Qualitative Findings include
+ * Hybrid model improves personalization
+ * Content-based filtering performs well even with sparse data
+ * Genre provides strong similarity signals
+  
